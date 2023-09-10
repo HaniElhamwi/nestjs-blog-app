@@ -1,10 +1,15 @@
+import { User } from 'src/user/models/user.interface';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './models/user.entity';
-import { Repository } from 'typeorm';
-import { User } from './models/user.interface';
+import { Like, Repository } from 'typeorm';
 import { Observable, catchError, from, map, switchMap, throwError } from 'rxjs';
 import { AuthService } from 'src/auth/auth.service';
+import {
+  paginate,
+  Pagination,
+  IPaginationOptions,
+} from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class UserService {
@@ -65,14 +70,73 @@ export class UserService {
     );
   }
 
+  paginate(options: IPaginationOptions): Observable<Pagination<User>> {
+    return from(paginate<User>(this.userRepository, options)).pipe(
+      map((usersPagable: Pagination<User>) => {
+        usersPagable.items.forEach(function (v) {
+          delete v.password;
+        });
+        return usersPagable;
+      }),
+    );
+  }
+  paginateFilterByUsername(
+    options: IPaginationOptions,
+    user: User,
+  ): Observable<Pagination<User>> {
+    return from(
+      this.userRepository.findAndCount({
+        skip: (Number(options.page) - 1) * Number(options.limit) || 0,
+        take: Number(options.limit),
+        order: { id: 'ASC' },
+        select: ['id', 'name', 'username', 'email', 'role'],
+        where: [
+          {
+            username: Like(`%${user.username}`),
+          },
+        ],
+      }),
+    ).pipe(
+      map(([users, totalUsers]) => {
+        const userPegable: Pagination<User> = {
+          items: users,
+          meta: {
+            currentPage: Number(options.page),
+            itemCount: users.length,
+            itemsPerPage: Number(options.limit),
+            totalItems: totalUsers,
+            totalPages: Math.ceil(totalUsers / Number(options.limit)),
+          },
+          links: {
+            first: options.route + `?limit=${options.limit}`,
+            previous: options.route + ``,
+            next:
+              options.route +
+              `limit=${options.limit}&page=${Number(options.page) + 1}`,
+            last:
+              options.route +
+              `limit=${options.limit}&page=${
+                Number(options.page) * Number(options.limit)
+              }`,
+          },
+        };
+        return userPegable;
+      }),
+    );
+  }
+
   deleteOne(id: number): Observable<any> {
     return from(this.userRepository.delete(id));
   }
 
   updateOne(id: number, user: User): Observable<any> {
-    delete user.password;
     delete user.email;
-    return from(this.userRepository.update(id, user));
+    delete user.password;
+    delete user.role;
+
+    return from(this.userRepository.update(id, user)).pipe(
+      switchMap(() => this.findOne(id)),
+    );
   }
 
   login(user: User): Observable<string> {

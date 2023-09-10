@@ -31,4 +31,7 @@ export class UserEntity {
   emailToLowercase() {
     this.email = this.email.toLocaleLowerCase();
   }
+
+  @Column({ nullable: true })
+  userProfile: string;
 }
