@@ -25,6 +25,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuid } from 'uuid';
 import path = require('path');
+import { UserIsGuard } from 'src/auth/guards/UserIsUser.guard';
 
 @Controller('user')
 export class UserController {
@@ -54,35 +55,36 @@ export class UserController {
 
   // @hasRoles(UserRole.ADMIN)
   // @UseGuards(JwtAuthGuard, RolesGuard)
-  @Get()
-  index(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-    @Query('username') username: string,
-  ): Observable<Pagination<User>> {
-    if (username === null || username === undefined) {
-      return this.userService.paginate({
-        page,
-        limit,
-        route: 'http://localhost:3000/users',
-      });
-    } else {
-      return this.userService.paginateFilterByUsername(
-        {
-          page,
-          limit,
-          route: 'http://localhost:3000/users',
-        },
-        { username },
-      );
-    }
-  }
+  // @Get()
+  // index(
+  //   @Query('page') page: number = 1,
+  //   @Query('limit') limit: number = 10,
+  //   @Query('username') username: string,
+  // ): Observable<Pagination<User>> {
+  //   if (username === null || username === undefined) {
+  //     return this.userService.paginate({
+  //       page,
+  //       limit,
+  //       route: 'http://localhost:3000/users',
+  //     });
+  //   } else {
+  //     return this.userService.paginateFilterByUsername(
+  //       {
+  //         page,
+  //         limit,
+  //         route: 'http://localhost:3000/users',
+  //       },
+  //       { username },
+  //     );
+  //   }
+  // }
 
   @Delete(':id')
   deleteOne(@Param('id') id): Observable<any> {
     return this.userService.deleteOne(Number(id));
   }
 
+  @UseGuards(JwtAuthGuard, UserIsGuard)
   @Put(':id')
   updateOne(@Body() user, @Param('id') id): Observable<any> {
     return this.userService.updateOne(Number(id), user);
