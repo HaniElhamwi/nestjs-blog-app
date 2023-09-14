@@ -25,7 +25,7 @@ export class UserEntity {
   @Column({ unique: true })
   username: string;
 
-  @Column()
+  @Column({ select: false })
   password: string;
 
   @Column()
@@ -40,7 +40,7 @@ export class UserEntity {
   }
 
   @OneToMany(() => BlogEntryEntity, (blogEntryEntity) => blogEntryEntity.author)
-  blogEntries: BlogEntryEntity;
+  blogEntries: BlogEntryEntity[];
 
   @Column({ nullable: true })
   userProfile: string;

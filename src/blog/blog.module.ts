@@ -4,6 +4,7 @@ import { BlogEntryEntity } from './model/blog-entry.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { UserModule } from 'src/user/user.module';
 import { BlogController } from './blog.controller';
+import { BlogService } from './blog.service';
 
 @Module({
   imports: [
@@ -12,5 +13,6 @@ import { BlogController } from './blog.controller';
     UserModule,
   ],
   controllers: [BlogController],
+  providers: [BlogService],
 })
 export class BlogModule {}

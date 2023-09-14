@@ -1,7 +1,7 @@
 import { User } from 'src/user/models/user.interface';
 
-export interface BlogEntity {
-  id?: number;
+export interface BlogEntry {
+  id?: string;
   title?: string;
   slug?: string;
   description?: string;
@@ -11,6 +11,6 @@ export interface BlogEntity {
   likes?: number;
   author?: User;
   headerImage?: string;
-  publishedDate?: string;
+  publishedDate?: Date;
   isPublished: boolean;
 }
